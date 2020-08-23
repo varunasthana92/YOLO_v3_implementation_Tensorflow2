@@ -112,4 +112,18 @@ def YOLOv3Net(cfgfile, model_size, num_classes):
             classes = tf.sigmoid(classes)
             anchors = tf.tile(anchors, [out_shape[1] * out_shape[2], 1])
             box_shapes = tf.exp(box_shapes) * tf.cast(anchors, dtype=tf.float32)
+
+
+            # convert relative positions of the center boxes into the real positions i.e. use the formulation
+            # given by the author in the original paper for bx, by
+            x = tf.range(out_shape[1], dtype=tf.float32)
+            y = tf.range(out_shape[2], dtype=tf.float32)
+            cx, cy = tf.meshgrid(x, y)
+            cx = tf.reshape(cx, (-1, 1))
+            cy = tf.reshape(cy, (-1, 1))
+            cxy = tf.concat([cx, cy], axis=-1)
+            cxy = tf.tile(cxy, [1, n_anchors])
+            cxy = tf.reshape(cxy, [1, -1, 2])
+            strides = (input_image.shape[1] // out_shape[1], input_image.shape[2] // out_shape[2])
+            box_centers = (box_centers + cxy) * strides
     return
