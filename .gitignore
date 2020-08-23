@@ -1,0 +1,6 @@
+__pycache__
+**.pyc
+**/Logs
+**/Misc
+**/CheckPoints
+**/weights
