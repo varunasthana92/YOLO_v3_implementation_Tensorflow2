@@ -1,7 +1,6 @@
 #! /usr/bin/env python
 import tensorflow as tf
 from tensorflow.keras import Model
-from tensorflow.keras.layers import BatchNormalization, Conv2D, Input, ZeroPadding2D, LeakyReLU, UpSampling2D
 import numpy as np
 
 def parse_cfg(cfgfile):
@@ -32,6 +31,7 @@ def YOLOv3Net(cfgfile, model_size, num_classes):
     # scale = 0
     input_image = tf.keras.Input(shape=model_size)
     inputs = input_image
+    yolo_reached = False
     # inputs = inputs / 255.0
 
     # as per the cgf file, block[0] is for [net] which contains the hyperparameters' values
@@ -44,7 +44,7 @@ def YOLOv3Net(cfgfile, model_size, num_classes):
             kernel_size = int(block["size"])
             strides = int(block["stride"])
             if strides > 1:
-                pad_layer = tf.keras.layers.ZeroPadding2D(int(kernel_size//2))
+                pad_layer = tf.keras.layers.ZeroPadding2D(int(kernel_size//2), name='pad_' + str(i+1))
                 inputs = pad_layer(inputs)
 
             # in_shape = inputs.shape.as_list()
@@ -74,22 +74,24 @@ def YOLOv3Net(cfgfile, model_size, num_classes):
             start = int(block["layers"][0])
             if len(block["layers"]) > 1:
                 end = int(block["layers"][1]) - i
-
-                # "1+start" as we want to move layers[0] backwards from current position
-                # but output_filters is behind by 1, thus it will be a step closer to backword
-                # movement from current poition (start is already negative)
-                # For ex: start = -2, and the network have 4 blocks executed, and 5th block (current)
-                # is 'route' block. Thus we need "inputs = 3rd block output" i.e. 5-2
-                # For index correction by '-1', inputs = idx[2] block output
+                # For ex: start = -1, and the network have 4 blocks executed, and 5th block (current)
+                # is 'route' block. Thus we need "inputs = 4rd block output" i.e. 5-1
+                # For index correction by '-1', inputs = idx[3] block output
                 # Also since out 'output_filter' variable is behind the current position by 1
-                # that is output_filter has data upto 4th block (or idx[3] block)
-                # inputs = output_filtes[start +1] = output_filters[-1]
+                # that is output_filter has data upto 4th block (or idx[3] block), then
+                # idx[3] = idx[-1] = idx[staart], thus inputs = output_filtes[start]
                 
-                # filters = output_filters[1 + start] + output_filters[end - 1]  # end-1 is idx correction
-                inputs = tf.keras.layers.concatenate([outputs[i + start], outputs[i + end]], axis=-1, name='concat_' + str(i+1))
+                # filters = output_filters[start] + output_filters[end - 1]  # end-1 is idx correction
+                inputs = tf.keras.layers.concatenate([outputs[start], outputs[end-1]], axis=-1, name='route_' + str(i+1))
             else:
                 # filters = output_filters[1 + start]
-                inputs = outputs[1 + start]
+                inputs = outputs[start]
+                if yolo_reached:
+                    shape = inputs.shape.as_list()
+                    temp = tf.keras.layers.Reshape((shape[1], shape[2], shape[3]), name = 'dummy_yolo_reshape_'+ str(i))(outputs[-1])
+                    temp = tf.keras.layers.Lambda(lambda x: x*0, name = 'dummy_yolo_all_zero_'+ str(i))(temp)
+                    inputs = tf.keras.layers.add([inputs, temp], name = 'route_' + str(i+1))
+                    yolo_reached =  False
 
         elif block["type"] == "shortcut":
             from_ = int(block["from"])
@@ -100,6 +102,8 @@ def YOLOv3Net(cfgfile, model_size, num_classes):
         elif block["type"] == "yolo":
             yolo_blocks.append(block)
             output_layers.append(outputs[-1])
+            # inputs = tf.keras.layers.Lambda(lambda x: x*0, name = 'yolo_zero_'+ str(i+1))(inputs)
+            yolo_reached = True
 
             '''            
             mask = block["mask"].split(",")
@@ -162,31 +166,5 @@ def YOLOv3Net(cfgfile, model_size, num_classes):
                 scale = 1
             '''
         outputs.append(inputs)
-        # output_filters.append(filters)
-        # break
-    # model = Model(input_image, out_pred)
-    model = Model(input_image, inputs)
-    # model.summary()
-    return yolo_blocks, output_layers, model
-    # return out_pred
-
-
-def YOLOv3Net1(cfgfile, model_size, num_classes):
-    input_image = tf.keras.Input(shape=model_size)
-    inputs = input_image
-    # inputs = tf.keras.Divinputs / 255.0
-    i=1
-    print(inputs.shape)
-    conv2D_layer = tf.keras.layers.Conv2D(3, (3,3), strides= 2,
-                    padding='valid', name='conv_' + str(i),
-                    use_bias=False) # input_shape=in_shape)
-    
-    outputs = conv2D_layer(inputs)
-    print(outputs.shape)
-    pad_layer = tf.keras.layers.ZeroPadding2D(int(4.0//2))
-    outputs = pad_layer(outputs)
-    print(outputs.shape)    
-    model = Model(inputs, outputs)
-    model.summary()
-    # return model
-    return model
+    YOLO_v3_Model = Model(input_image, inputs)
+    return yolo_blocks, output_layers, YOLO_v3_Model
