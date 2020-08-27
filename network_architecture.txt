@@ -6,14 +6,14 @@ dummy_* layers are made to have zero value and then added to another layer.
 
 
 For exxample,
-                   |--> --> box_prediction
-                   |
-  (1) --> (2) --> (3) --> (dummy_yolo_reshape as (2)) --> (dummy_yolo_zero) --> (5)
-           |                                                                     |
-           | --> --> --> --> --> --> --> --> --> --> --> --> --> --> --> --> --> |
+                           |--> box_prediction mathematical operations
+                           |
+  (1) --> (2) --> (3) --> (4) --> (dummy_yolo_reshape as (2)) --> (dummy_yolo_zero) --Add-> (5)
+           |                                                                           |
+           |--> --> --> --> --> --> --> --> --> --> --> --> --> --> --> --> --> --> -->|
 
-if dummy layers are not used, then layer (3) cannot be saved in the model, as it will be a
-dangling layer
+if dummy layers are not used, then layers (3) and (4) cannot be saved in the model, as they will 
+be dangling layers.
 
 ##################################################################################################
 ################################################################################################## 
