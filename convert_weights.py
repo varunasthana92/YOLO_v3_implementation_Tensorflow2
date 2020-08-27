@@ -1,7 +1,7 @@
 #convert_weights.py
 import numpy as np
 import tensorflow as tf
-from yolo_v3 import YOLOv3Net
+from yolo_v3 import YOLOv3Net, decode
 from yolo_v3 import parse_cfg
 def load_weights(model,cfgfile,weightfile):
     # Open the weights file
@@ -58,13 +58,14 @@ def main():
     num_classes = 80
     print('tf version = ', tf.__version__)
     yolo_blocks, output_layers, YOLO_v3_Model = YOLOv3Net(cfgfile, model_size, num_classes)
-    YOLO_v3_Model.summary()
-    # load_weights(YOLO_v3_Model,cfgfile,weightfile)
-    # try:
-    #     model.save_weights('weights/yolov3_weights.tf')
-    #     print('\nThe file \'yolov3_weights.tf\' has been saved successfully.')
-    # except IOError:
-    #     print("Couldn't write the file \'yolov3_weights.tf\'.")
+    # YOLO_v3_Model.summary()
+    load_weights(YOLO_v3_Model,cfgfile,weightfile)
+    out_pred = decode(yolo_blocks, model_size, output_layers, num_classes)
+    try:
+        YOLO_v3_Model.save_weights('weights/yolo_v3_weights.tf')
+        print('\nThe file \'yolo_v3_weights.tf\' has been saved successfully.')
+    except IOError:
+        print("Couldn't write the file \'yolo_v3_weights.tf\'.")
     return
 
 if __name__ == '__main__':
