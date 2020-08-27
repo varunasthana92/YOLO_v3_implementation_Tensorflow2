@@ -101,7 +101,7 @@ def YOLOv3Net(cfgfile, model_size, num_classes):
             yolo_blocks.append(block)
             output_layers.append(outputs[-1])
 
-            '''
+            '''            
             mask = block["mask"].split(",")
             mask = [int(x) for x in mask]
             anchors = block["anchors"].split(",")
