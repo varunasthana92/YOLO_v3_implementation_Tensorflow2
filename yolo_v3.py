@@ -28,7 +28,7 @@ def YOLOv3Net(cfgfile, model_size, num_classes):
     # out_pred = []
     yolo_blocks = []
     output_layers = []
-    # scale = 0
+    scale = 1
     input_image = tf.keras.Input(shape=model_size)
     inputs = input_image
     yolo_reached = False
@@ -73,7 +73,7 @@ def YOLOv3Net(cfgfile, model_size, num_classes):
             block["layers"] = block["layers"].split(',')
             start = int(block["layers"][0])
             if len(block["layers"]) > 1:
-                end = int(block["layers"][1]) - i
+                end     = int(block["layers"][1])
                 # For ex: start = -1, and the network have 4 blocks executed, and 5th block (current)
                 # is 'route' block. Thus we need "inputs = 4rd block output" i.e. 5-1
                 # For index correction by '-1', inputs = idx[3] block output
@@ -82,16 +82,16 @@ def YOLOv3Net(cfgfile, model_size, num_classes):
                 # idx[3] = idx[-1] = idx[staart], thus inputs = output_filtes[start]
                 
                 # filters = output_filters[start] + output_filters[end - 1]  # end-1 is idx correction
-                inputs = tf.keras.layers.concatenate([outputs[start], outputs[end-1]], axis=-1, name='route_' + str(i+1))
+                inputs  = tf.keras.layers.concatenate([outputs[start], outputs[end-1]], axis=-1, name='route_' + str(i+1))
             else:
                 # filters = output_filters[1 + start]
                 inputs = outputs[start]
                 if yolo_reached:
-                    shape = inputs.shape.as_list()
-                    temp = tf.keras.layers.Reshape((shape[1], shape[2], shape[3]), name = 'dummy_yolo_reshape_'+ str(i))(outputs[-1])
-                    temp = tf.keras.layers.Lambda(lambda x: x*0, name = 'dummy_yolo_all_zero_'+ str(i))(temp)
-                    inputs = tf.keras.layers.add([inputs, temp], name = 'route_' + str(i+1))
-                    yolo_reached =  False
+                    shape           = inputs.shape.as_list()
+                    temp            = tf.keras.layers.Reshape((shape[1], shape[2], shape[3]), name = 'dummy_yolo_reshape_'+ str(i))(outputs[-1])
+                    temp            = tf.keras.layers.Lambda(lambda x: x*0, name = 'dummy_yolo_all_zero_'+ str(i))(temp)
+                    inputs          = tf.keras.layers.add([inputs, temp], name = 'route_' + str(i+1))
+                    yolo_reached    =  False
 
         elif block["type"] == "shortcut":
             from_ = int(block["from"])
@@ -105,66 +105,55 @@ def YOLOv3Net(cfgfile, model_size, num_classes):
             # inputs = tf.keras.layers.Lambda(lambda x: x*0, name = 'yolo_zero_'+ str(i+1))(inputs)
             yolo_reached = True
 
-            '''            
-            mask = block["mask"].split(",")
-            mask = [int(x) for x in mask]
-            anchors = block["anchors"].split(",")
-            anchors = [int(a) for a in anchors]
-            anchors = [(anchors[i], anchors[i + 1]) for i in range(0, len(anchors), 2)]
-            anchors = [anchors[i] for i in mask]
-            n_anchors = len(anchors)
-
-            out_shape = inputs.get_shape().as_list()
-            # inputs = tf.reshape(inputs, [-1, n_anchors * out_shape[1] * out_shape[2], 5 + num_classes])
-            # box_centers = inputs[:, :, 0:2]
-            # box_shapes = inputs[:, :, 2:4]
-            # confidence = inputs[:, :, 4:5]
-            # classes = inputs[:, :, 5: num_classes + 5]
-            model_out = inputs
-            inputs_curr = tf.reshape(model_out, [-1, n_anchors * out_shape[1] * out_shape[2], 5 + num_classes])
-            box_centers = inputs_curr[:, :, 0:2]
-            box_shapes = inputs_curr[:, :, 2:4]
-            confidence = inputs_curr[:, :, 4:5]
-            classes = inputs_curr[:, :, 5: num_classes + 5]
-
-            # refine the output by applying sigmoid function to have the value in the range [0,1]
-            box_centers = tf.sigmoid(box_centers)
-            confidence = tf.sigmoid(confidence)
-
-            # instead of using softmax, we use sigmoid for classification
-            # as softmax assumes mutually exclusive classes i.e. if it is in classified in one, then cannot
-            # be other. Thus in softmax we take the class as the argmax of all the probabilities
-            # but with sigmoid, all classes get a probability and are then verified agaisnt a threshold
-            # This is useful in more real-world scenario when we have overlapping classes like'dog','animal' 
-            classes = tf.sigmoid(classes)
-            anchors = tf.tile(anchors, [out_shape[1] * out_shape[2], 1])
-            box_shapes = tf.exp(box_shapes) * tf.cast(anchors, dtype=tf.float32)
-
-            # convert relative positions of the center boxes into the real positions i.e. use the formulation
-            # given by the author in the original paper for bx, by
-            x = tf.range(out_shape[1], dtype=tf.float32)
-            y = tf.range(out_shape[2], dtype=tf.float32)
-            cx, cy = tf.meshgrid(x, y)
-            cx = tf.reshape(cx, (-1, 1))
-            cy = tf.reshape(cy, (-1, 1))
-            cxy = tf.concat([cx, cy], axis=-1)
-            cxy = tf.tile(cxy, [1, n_anchors])
-            cxy = tf.reshape(cxy, [1, -1, 2])
-            in_shape = input_image.shape.as_list()
-            strides = (in_shape[1] / out_shape[1], in_shape[2] / out_shape[2])
-            print(input_image.shape)
-            print(out_shape[2])
-            print('strides = ', strides)
-            print('box_before shape', box_centers.shape)
-            box_centers = tf.multiply((box_centers + cxy), strides)
-            # print('box after shape', box_centers.shape)
-            prediction = tf.concat([box_centers, box_shapes, confidence, classes], axis=-1)
-            if scale:
-                out_pred = tf.concat([out_pred, prediction], axis=1)
-            else:
-                out_pred = prediction
-                scale = 1
-            '''
         outputs.append(inputs)
-    YOLO_v3_Model = Model(input_image, inputs)
+    YOLO_v3_Model = Model(input_image, outputs = inputs)
     return yolo_blocks, output_layers, YOLO_v3_Model
+
+def decode(yolo_blocks, model_size, output_layers, num_classes):
+    out_pred = []
+    
+    for i, block in enumerate(yolo_blocks):                  
+        mask = block["mask"].split(",")
+        mask = [int(x) for x in mask]
+        anchors         = block["anchors"].split(",")
+        anchors         = [int(a) for a in anchors]
+        anchors         = [(anchors[i], anchors[i + 1]) for i in range(0, len(anchors), 2)]
+        anchors         = np.array([anchors[k] for k in mask])
+        n_anchors       = len(anchors)
+
+        out_shape       = output_layers[i].get_shape().as_list()
+        batch_size      =  1 if out_shape[0] == None else out_shape[0]
+        stride          = [int(model_size[0] / out_shape[1]), int(model_size[1] / out_shape[2])]
+        # print(stride)
+        model_out       = tf.reshape(output_layers[i], (-1, out_shape[1], out_shape[2], n_anchors, 5 + num_classes))
+        conv_raw_dxdy   = model_out[:, : , :, : , 0:2]
+        conv_raw_dwdh   = model_out[:, : , :, : , 2:4]
+        conv_raw_conf   = model_out[:, : , :, : , 4:5]
+        conv_raw_prob   = model_out[:, : , :, : , 5: num_classes + 5]
+        # print(conv_raw_prob.shape)
+        
+        y               = tf.tile(tf.range(out_shape[1], dtype=tf.int32)[:, tf.newaxis], [1, out_shape[2]])
+        x               = tf.tile(tf.range(out_shape[2], dtype=tf.int32)[tf.newaxis, :], [out_shape[1], 1])
+        cx_cy_grid      = tf.concat([x[:, :, tf.newaxis], y[:, :, tf.newaxis]], axis=-1)
+        cx_cy_grid      = tf.tile(cx_cy_grid[tf.newaxis, :, :, tf.newaxis, :], [batch_size, 1, 1, n_anchors, 1])
+        cx_cy_grid      = tf.cast(cx_cy_grid, tf.float32)
+
+        # refine the output by applying sigmoid function to have the value in the range [0,1]
+        # convert relative positions of the center boxes into the real positions i.e. use the formulation
+        # given by the author in the original paper for bx, by
+        pred_xy         = (tf.sigmoid(conv_raw_dxdy) + cx_cy_grid)*stride
+        pred_wh         = (tf.exp(conv_raw_dwdh) * anchors) * stride
+        pred_xywh       = tf.concat([pred_xy, pred_wh], axis=-1)
+
+        # instead of using softmax, we use sigmoid for classification
+        # as softmax assumes mutually exclusive classes i.e. if it is in classified in one, then cannot
+        # be other. Thus in softmax we take the class as the argmax of all the probabilities
+        # but with sigmoid, all classes get a probability and are then verified agaisnt a threshold
+        # This is useful in more real-world scenario when we have overlapping classes like'dog','animal' 
+        pred_conf       = tf.sigmoid(conv_raw_conf)
+        pred_prob       = tf.sigmoid(conv_raw_prob)
+
+        output          =  tf.concat([pred_xywh, pred_conf, pred_prob], axis=-1)
+        # print(output)
+        out_pred.append(output)
+    return out_pred
