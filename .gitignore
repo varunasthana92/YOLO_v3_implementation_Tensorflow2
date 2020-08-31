@@ -4,4 +4,4 @@ __pycache__
 **/Misc
 **/CheckPoints
 **/weights
-**/darknet
+**.weights
