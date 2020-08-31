@@ -25,8 +25,8 @@ Download the pre-trained weights of the YOLO_V3 provided by the authors of the o
 
 ```
 git clone https://github.com/varunasthana92/YOLO_v3_implementation_Tensorflow2.git
+<download the pre-trained weight file in the "data" sub-directory>
 mkdir weights
-<download the pre-trained weight file>
 python3 convert_weights.py
 ```
 
