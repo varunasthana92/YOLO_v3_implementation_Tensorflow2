@@ -1,9 +1,11 @@
 # YOLO_V3 object detection implementation in tensorflow2 using pre-trained model
 
 ## Overview
-[Link](https://arxiv.org/pdf/1804.02767.pdf) to the paper "YOLOv3: An Incremental Improvement" 
+["YOLOv3: An Incremental Improvement" ](https://arxiv.org/pdf/1804.02767.pdf) paper can be accessed from [here](https://arxiv.org/pdf/1804.02767.pdf). 
 
-YOLO is used for multiple object detection in a colored image. Version-3 supports detection of 80 different objects. The original model was trained on COCO dataset (for more details refer the paper). YOLO_V3 model is generated using the architecture "yolov3.cfg" config file provided by the authors. Complete end-to-end network architecture flowchart is provided in the "Model.png" file. For easy understanding of the config file block numbers have been added in the config file and the custom config file is provided in the "cfg" directory. __Note-__ Block numbers are not to be confused with the layer numbers. Any reference to a layer number are "0" based index numbers, like in "route" or "shortcut" blocks in the config file. 
+<p style='text-align: justify;'>
+YOLO is used for multiple object detection in a colored image. Version-3 supports detection of 80 different objects. The original model was trained on COCO dataset (for more details refer the paper). YOLO_V3 model is generated using the architecture "yolov3.cfg" config file provided by the authors. Complete end-to-end network architecture flowchart is provided in the "Model.png" file. For easy understanding of the config file block numbers have been added in the config file and the custom config file is provided in the "cfg" directory. __Note-__ Block numbers are not to be confused with the layer numbers. Any reference to a layer number are "0" based index numbers, like in "route" or "shortcut" blocks in the config file.
+</p>
 
 <p align="center">
 <img src="https://github.com/varunasthana92/YOLO_v3_implementation_Tensorflow2/blob/master/Result/street.jpg">
@@ -15,7 +17,7 @@ YOLO is used for multiple object detection in a colored image. Version-3 support
 
 ## Dependencies
 * python 3.5.2
-* OpenCv 4.1.2
+* OpenCV 4.1.2
 * numpy 1.18.1
 * tensorflow 2.2.0
 
