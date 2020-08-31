@@ -62,7 +62,7 @@ def YOLOv3Net(cfgfile, num_classes= 80, model_size = (416, 416, 3), max_total_si
         elif block["type"] == "route":
             '''
              the attribute 'layers' holds a value of -4 which means that if we are in route block,
-             we need to backward 4 layers in the cfg file and then output the feature map from that
+             we need to move backward 4 layers in the cfg file and use the feature map from that
              layer. However,for the case of the route block whose attribute 'layers' in cfg file has
              2 values like in lines 633-634, layers contains -1 and 61, we need to concatenate the
              feature map from a previous layer (-1) and the feature map from layer 61
@@ -141,7 +141,7 @@ def decode(inputs, block, model_size, num_classes):
     anchors         = block["anchors"].split(",")
     anchors         = [int(a) for a in anchors]
     anchors         = [(anchors[i], anchors[i + 1]) for i in range(0, len(anchors), 2)]
-    anchors         = np.array([anchors[k] for k in mask]) / 416.
+    anchors         = np.array([anchors[k] for k in mask]) * 1. / model_size[0]
     n_anchors       = len(anchors)
     out_shape       = inputs.get_shape().as_list()
     batch_size      =  1 if out_shape[0] == None else out_shape[0]
