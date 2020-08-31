@@ -3,9 +3,7 @@
 ## Overview
 ["YOLOv3: An Incremental Improvement" ](https://arxiv.org/pdf/1804.02767.pdf) paper can be accessed from [here](https://arxiv.org/pdf/1804.02767.pdf). 
 
-<div style='text-align: justify'>
-YOLO is used for multiple object detection in a colored image. Version-3 supports detection of 80 different objects. The original model was trained on COCO dataset (for more details refer the paper). YOLO_V3 model is generated using the architecture "yolov3.cfg" config file provided by the authors. Complete end-to-end network architecture flowchart is provided in the "Model.png" file. For easy understanding of the config file block numbers have been added in the config file and the custom config file is provided in the "cfg" directory. Block numbers are not to be confused with the layer numbers. Any reference to a layer number are "0" based index numbers, like in "route" or "shortcut" blocks in the config file.
-</div>
+YOLO is used for multiple object detection in a colored image. Version-3 supports detection of 80 different objects. The original model was trained on COCO dataset (for more details refer the paper). Authors have provided the [pre-trained weights](https://pjreddie.com/media/files/yolov3.weights) and the [network architecture information](https://github.com/pjreddie/darknet/blob/master/cfg/yolov3.cfg). Here, YOLO_V3 model is generated using the architecture information provided in the "yolov3.cfg" config file. Complete end-to-end network architecture flowchart is provided in the "Model.png" file. For easy understanding of the config file, block numbers have been added and the custom config file is provided in the "cfg" directory of this repository. __Note-__ Block numbers are not to be confused with the layer numbers. Any reference to a layer number is "0" based index number, like in "route" or "shortcut" blocks in the config file.  
 
 <p align="center">
 <img src="https://github.com/varunasthana92/YOLO_v3_implementation_Tensorflow2/blob/master/Result/street.jpg">
