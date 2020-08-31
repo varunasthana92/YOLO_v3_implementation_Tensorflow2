@@ -21,13 +21,14 @@ YOLO is used for multiple object detection in a colored image. Version-3 support
 * numpy 1.18.1
 * tensorflow 2.2.0
 
-## Run Command
+## How to run
 
 Download the pre-trained weights of the YOLO_V3 provided by the authors of the original paper from [here](https://pjreddie.com/media/files/yolov3.weights) and save it in the 'data/' sub-directory. Now run the below command to convert the weights to tensorflow compatible format.
 
 ```
 git clone https://github.com/varunasthana92/YOLO_v3_implementation_Tensorflow2.git
 mkdir weights
+<download the pre-trained weight file>
 python3 convert_weights.py
 ```
 
